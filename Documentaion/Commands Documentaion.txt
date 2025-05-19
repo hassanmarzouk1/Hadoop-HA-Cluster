@@ -1,0 +1,110 @@
+===============================
+COMMON COMMANDS IN 4 CONTAINERS
+===============================
+# Install dependencies
+apt update -y && apt upgrade -y 
+apt install nano -y
+apt install openssh-server -y
+apt install sudo -y
+apt install sshpass -y
+
+
+# Install OpenJDK 8
+wget https://builds.openlogic.com/downloadJDK/openlogic-openjdk/8u442-b06/openlogic-openjdk-8u442-b06-linux-x64.tar.gz ./
+tar -xvzf openlogic-openjdk-8u442-b06-linux-x64.tar.gz
+mv openlogic-openjdk-8u442-b06-linux-x64 java
+update-alternatives --install /usr/bin/java java /usr/local/java/bin/java 1
+update-alternatives --install /usr/bin/javac javac /usr/local/java/bin/javac 1
+
+# Install Hadoop 3.3.6
+wget https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz ./
+tar -xvzf hadoop-3.3.6.tar.gz
+mv hadoop-3.3.6 hadoop
+mkdir -p /app/hadoop/tmp
+mkdir -p /usr/local/hadoop/hdfs/namenode
+mkdir -p /usr/local/hadoop/hdfs/datanode
+
+nano /usr/local/hadoop/etc/hadoop/core-site.xml
+nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+nano /usr/local/hadoop/etc/hadoop/workers
+nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+
+# Install Zookeeper 3.8.4
+wget https://dlcdn.apache.org/zookeeper/zookeeper-3.8.4/apache-zookeeper-3.8.4-bin.tar.gz ./
+tar -xvzf apache-zookeeper-3.8.4-bin.tar.gz
+mv apache-zookeeper-3.8.4-bin zookeeper
+mkdir -p /usr/local/zookeeper/data
+nano /usr/local/zookeeper/conf/zoo.cfg
+
+# Add Hadoop User
+groupadd hadoop
+useradd --disabled-password --ingroup hadoop hduser
+echo "hduser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "hduser:hadoop" | chpasswd
+
+# Change ownership of Hadoop and Zookeeper directories
+chown -R hduser:hadoop /app/hadoop/tmp
+chown -R hduser:hadoop /usr/local/hadoop
+chown -R hduser:hadoop /usr/local/zookeeper
+chmod -R 755 /usr/local/hadoop
+chmod -R 755 /usr/local/zookeeper
+# Switch to hduser
+su - hduser
+
+=====================================================
+MASTER 1 Commands (After running the common commands)
+=====================================================
+hdfs --daemon start journalnode
+zkServer.sh start
+hdfs zkfc -formatZK
+hdfs namenode -format
+hdfs --daemon start namenode
+
+===================================================================
+MASTER 2 Commands (After running the common commands & Master 1 )
+===================================================================
+zkServer.sh start
+hdfs namenode -bootstrapStandby
+hdfs --daemon start journalnode
+
+===================================================================
+MASTER 3 Commands (After running the common commands & Master 1 )
+===================================================================
+zkServer.sh start
+hdfs namenode -bootstrapStandby
+hdfs --daemon start journalnode
+
+===================================================================
+Worker Commands (After running the common commands & Master 1,2,3 )
+===================================================================
+
+start-all.sh
+
+
+===> Final check your cluster by:
+hdfs haadmin -getAllServiceState
+yarn rmadmin -getAllServiceState
+==> Try to kill the NameNode / ResourceManager Process/s in one of the master contaniers and test the HA using:
+							watch -n 5 "hdfs haadmin -getAllServiceState"
+							watch -n 5 "yarn rmadmin -getAllServiceState"
+							
+# Test MapReduce Job
+							
+hdfs dfs -mkdir /input
+echo "Hello From Cluster" > ./hadoop/file.txt
+hdfs dfs -put ./hadoop/file.txt /input
+hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar wordcount /input /output
+
+
+==============================================================================================>
+NOTE: If you created more containers act as workers in the cluster, 
+all you need is to write their hostname in the workers file that exists in Documentation Folder
+and then compose up your cluster 
+==============================================================================================>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Congratulations!, You are now have a HA Hadoop Cluster!!
+GG
+DONE by H2
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

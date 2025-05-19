@@ -1,0 +1,126 @@
+services:
+  master1:
+    build: .
+    container_name: master1
+    hostname: master1
+    ports:
+      - "9870:9870"
+      - "8088:8088"
+    networks:
+      - hadoop_network
+    restart: always
+    volumes:
+      - ./Configurations:/Configurations
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - namenode_data1:/usr/local/hadoop/hdfs/namenode
+      - journalnode1:/usr/local/hadoop/hdfs/journal
+      - zookeeper1:/usr/local/zookeeper/
+    healthcheck:
+      test: ["CMD-SHELL", "hdfs haadmin -checkHealth nn1"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 50s
+
+    mem_limit: 3G
+    cpus: 1
+
+  master2:
+    build: .
+    container_name: master2
+    hostname: master2
+    ports:
+      - "9871:9870"
+      - "8089:8088"
+    networks:
+      - hadoop_network
+    restart: always
+    volumes:
+      - ./Configurations:/Configurations
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - namenode_data2:/usr/local/hadoop/hdfs/namenode
+      - journalnode2:/usr/local/hadoop/hdfs/journal
+      - zookeeper2:/usr/local/zookeeper/
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'QuorumPeerMain|NameNode|DFSZKFailoverController|ResourceManager|JournalNode'"]      
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+  
+    mem_limit: 3G
+    cpus: 1
+
+
+  master3:
+    build: .
+    container_name: master3
+    hostname: master3
+    ports:
+      - "9872:9870"
+      - "8090:8088"
+    networks:
+      - hadoop_network
+    restart: always
+    volumes:
+      - ./Configurations:/Configurations
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - namenode_data3:/usr/local/hadoop/hdfs/namenode
+      - journalnode3:/usr/local/hadoop/hdfs/journal
+      - zookeeper3:/usr/local/zookeeper/
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'QuorumPeerMain|NameNode|DFSZKFailoverController|ResourceManager|JournalNode'"]      
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+  
+    mem_limit: 3G
+    cpus: 1
+
+
+  worker:
+    build: .
+    container_name: worker
+    hostname: worker
+    ports:
+      - "9864:9864"
+    networks:
+      - hadoop_network
+    restart: always
+    volumes:
+      - ./Configurations:/Configurations
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - datanode_data:/usr/local/hadoop/hdfs/datanode
+    healthcheck:
+      test: ["CMD-SHELL", "jps | grep -E 'DataNode|NodeManager'"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      master1:
+        condition: service_healthy
+      master2:
+        condition: service_healthy
+      master3:
+        condition: service_healthy
+
+    mem_limit: 4G
+    cpus: 3
+
+ 
+volumes:
+  namenode_data1:
+  namenode_data2:
+  namenode_data3:
+  datanode_data:
+  zookeeper1:
+  zookeeper2:
+  zookeeper3:
+  journalnode1:
+  journalnode2:
+  journalnode3:
+
+networks:
+    hadoop_network:
+      driver: bridge
