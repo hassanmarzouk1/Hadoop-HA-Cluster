@@ -1,6 +1,6 @@
 services:
   master1:
-    build: .
+    image: hadoop_hbase:latest
     container_name: master1
     hostname: master1
     ports:
@@ -26,7 +26,7 @@ services:
     cpus: 1
 
   master2:
-    build: .
+    image: hadoop_hbase:latest
     container_name: master2
     hostname: master2
     ports:
@@ -53,7 +53,7 @@ services:
 
 
   master3:
-    build: .
+    image: hadoop_hbase:latest
     container_name: master3
     hostname: master3
     ports:
@@ -80,7 +80,7 @@ services:
 
 
   worker:
-    build: .
+    image: hadoop_hbase:latest
     container_name: worker
     hostname: worker
     ports:
@@ -108,7 +108,73 @@ services:
     mem_limit: 4G
     cpus: 3
 
- 
+  hbmaster1:
+    image: hadoop_hbase:latest
+    container_name: hbmaster1
+    hostname: hbmaster1
+
+    volumes:
+      - ./Configurations/HBase/hbase-site.xml:/usr/local/hbase/conf/hbase-site.xml
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - ./Scripts/:/usr/local/hbase/scripts
+    ports:
+      - "16000:16000"
+      - "16010:16010"
+    networks:
+      - hadoop_network
+    depends_on:
+      worker:
+        condition: service_healthy
+
+
+
+  hbmaster2:
+    image: hadoop_hbase:latest
+    container_name: hbmaster2
+    hostname: hbmaster2
+    volumes:
+      - ./Configurations/HBase/hbase-site.xml:/usr/local/hbase/conf/hbase-site.xml
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+      - ./Scripts/:/usr/local/hbase/scripts
+    ports:
+      - "16001:16000"
+      - "16011:16010"
+    networks:
+      - hadoop_network
+    depends_on:
+      worker:
+        condition: service_healthy
+
+  regionserver1:
+    image: hadoop_hbase:latest
+    container_name: regionserver1
+    hostname: regionserver1
+    volumes:
+      - ./Configurations/HBase/hbase-site.xml:/usr/local/hbase/conf/hbase-site.xml
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+    networks:
+      - hadoop_network
+    depends_on:
+      hbmaster1:
+        condition: service_started
+      hbmaster2:
+        condition: service_started
+
+  regionserver2:
+    image: hadoop_hbase:latest
+    container_name: regionserver2
+    hostname: regionserver2
+    volumes:
+      - ./Configurations/HBase/hbase-site.xml:/usr/local/hbase/conf/hbase-site.xml
+      - ./Configurations/start.sh:/usr/local/bin/start.sh
+    networks:
+      - hadoop_network
+    depends_on:
+      hbmaster1:
+        condition: service_started
+      hbmaster2:
+        condition: service_started
+
 volumes:
   namenode_data1:
   namenode_data2:

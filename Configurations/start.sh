@@ -9,7 +9,7 @@ HOSTNAME=$(hostname)
 ZK_ID=$(hostname | grep -oE '[0-9]+')
 
 # Determine the container type based on the hostname and start appropriate Hadoop services
-if [[ "$HOSTNAME" == *"master"* ]]; then
+if [[ "$HOSTNAME" == "master"* ]]; then
     echo "$ZK_ID" > /usr/local/zookeeper/data/myid
     zkServer.sh start
     hdfs --daemon start journalnode
@@ -80,6 +80,21 @@ elif [[ "$HOSTNAME" == *"worker"* ]]; then
         yarn --daemon start nodemanager
         echo "DataNode and NodeManager started on $HOSTNAME."
 
+elif [[ "$HOSTNAME" == *"hbmaster"* ]]; then
+        # Start the HBase Master service
+        echo "Starting HBase Master on $HOSTNAME..."
+        hbase master start
+        echo "HBase Master started on $HOSTNAME."
+
+elif [[ "$HOSTNAME" == *"regionserver"* ]]; then
+        # Start the HBase RegionServer service
+        echo "Starting HBase RegionServer on $HOSTNAME..."
+        hbase regionserver start
+        echo "HBase RegionServer started on $HOSTNAME."
+
+else
+    echo "Unknown container type: $HOSTNAME"
+    exit 1
 
 
 fi

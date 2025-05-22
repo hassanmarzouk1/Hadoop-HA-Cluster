@@ -136,21 +136,25 @@
     <name>dfs.client.failover.proxy.provider.mycluster</name>
     <value>org.apache.hadoop.hdfs.server.namenode.ha.RequestHedgingProxyProvider</value>
   </property>
+
   <property>
     <name>dfs.ha.fencing.methods</name>
     <value>shell(/bin/true)</value>
   </property>
+
   <property>
     <name>dfs.ha.fencing.ssh.private-key-files</name>
     <value>/home/hduser/.ssh/id_rsa</value>
   </property>
-  <property>
-    <name>dfs.ha.nn.not-become-active-in-safemode</name>
-    <value>true</value>
-  </property>
+
   <property>
     <name>dfs.ha.tail-edits.in-progress</name>
     <value>true</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.nn.not-become-active-in-safemode</name>
+    <value>false</value>
   </property>
 
   <!-- 

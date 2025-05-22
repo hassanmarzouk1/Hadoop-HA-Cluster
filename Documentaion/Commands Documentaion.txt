@@ -98,13 +98,29 @@ hdfs dfs -put ./hadoop/file.txt /input
 hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-*.jar wordcount /input /output
 
 
+===================================================================
+HMaster Commands 
+(After making sure the hadoop cluster is running (Masters & Workes))
+===================================================================
+
+hbase master start
+
+===================================================================
+Worker Commands (After making sure the hadoop cluster is running 
+(Masters & Workes) and after starting the hbase master directly)
+===================================================================
+
+hbase regionserver start
+
+
+
 ==============================================================================================>
 NOTE: If you created more containers act as workers in the cluster, 
 all you need is to write their hostname in the workers file that exists in Documentation Folder
 and then compose up your cluster 
 ==============================================================================================>
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Congratulations!, You are now have a HA Hadoop Cluster!!
+Congratulations!, You are now have a HA Hadoop-Hive Cluster!!
 GG
 DONE by H2
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
